@@ -4,14 +4,30 @@ from data import price
 
 total_price = 0
 purchased_items = []
-
 now = datetime.now()
-recipient_name = input(f"\n👤 Enter recipient's name: ").strip()
+
+# ✅ Merge function: only used at the end
+def get_merged_items():
+    merged = {}
+    for item in purchased_items:
+        name = item["name"]
+        if name in merged:
+            merged[name]["amount"] += item["amount"]
+            merged[name]["cost"] += item["cost"]
+        else:
+            merged[name] = {
+                "name": name,
+                "amount": item["amount"],
+                "cost": item["cost"]
+            }
+    return list(merged.values())
 
 if __name__ == "__main__":
+    recipient_name = input(f"\n👤 Enter recipient's name: ").strip()
+
     while True:
         try:
-            item_key = input(f"\nEnter vegtable key {len(purchased_items) + 1} (or 'q' to quit, 'r' to remove last entry, or number to remove specific): ").strip().lower()
+            item_key = input(f"\nEnter vegtable key {len(purchased_items) + 1} ('q' to quit, 'r' to remove last entry, or number to remove specific): ").strip().lower()
 
             if item_key == "q":
                 break
@@ -20,7 +36,7 @@ if __name__ == "__main__":
                 recipient_name = input(f"\n👤 Enter recipient's name: ").strip()
 
             if item_key == "r":
-                if len(purchased_items) == 0:
+                if not purchased_items:
                     print("⚠️ Billing has not started yet.")
                 else:
                     removed_item = purchased_items.pop()
@@ -64,24 +80,25 @@ if __name__ == "__main__":
         except Exception as e:
             print("⚠️ Error:", e)
 
+    # 🧾 Final merged summary
+    merged_items = get_merged_items()
     summary = []
-    print("=================================================")
-    summary.append(f"\n🧾 Purchase Summary -")
-    summary.append(f"{now.strftime('%Y-%m-%d %H:%M:%S')}")
-    summary.append(f"👤 Recipient Name: {recipient_name}")
-    summary.append("-------------------------------------------------")
-    summary.append(f"{'No.':<5}{'vegtables':<15}{'Amount(g)':<12}{'Price(₹)':<10}")
-    summary.append("-------------------------------------------------")
+    print("====================================================================================")
+    summary.append(f"\n🧾 Purchase Summary -\n")
+    summary.append(f"👤 Recipient Name: {recipient_name:<30} Date & Time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+    summary.append("------------------------------------------------------------------------------------")
+    summary.append(f"\n{'No.':<5}{'vegtables':<15}{'Amount(g)':<12}{'Price(₹)':<10}")
+    summary.append("------------------------------------------------------------------------------------")
 
-    for i, item in enumerate(purchased_items, 1):
+    for i, item in enumerate(merged_items, 1):
         summary.append(f"{i:<5}{item['name']:<15}{item['amount']:<12.2f}{item['cost']:<10.2f}")
 
-    summary.append("-------------------------------------------------")
-    summary.append(f"🛒 Total Items: {len(purchased_items)}")
-    summary.append(f"💸 Final Total: ₹{total_price:.2f}")
-    summary.append("=================================================\n")
+    summary.append("------------------------------------------------------------------------------------")
+    summary.append(f"📦 Total Items: {len(merged_items)}")
+    summary.append(f"💸 Gross Total: ₹{total_price:.2f}")
+    summary.append(f"====================================================================================\n")
 
-    print(f"\n".join(summary))
+    print("\n".join(summary))
 
     with open("recipient_data.txt", "a", encoding="utf-8") as file:
-        file.write("\n".join(summary))
+        file.write("\n".join(summary) + "\n")
